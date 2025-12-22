@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devopsendproj-node
-  PHP_IMAGE:  ${{ secrets.DOCKERHUB_USERNAME }}/devopsendproj-php
-  SHA_TAG:    ${{ github.sha }}
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/devopsendproj
+  SHA_TAG: ${{ github.sha }}
 
 jobs:
   build-and-push:
