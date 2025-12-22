@@ -33,9 +33,10 @@ jobs:
           context: ./DevOpsEndProj-main/node
           push: true
           tags: |
-            ${{ env.NODE_IMAGE }}:${{ env.SHA_TAG }}
-            ${{ env.NODE_IMAGE }}:latest
-
+           ${{ env.IMAGE_NAME }}:node
+            ${{ env.IMAGE_NAME }}:node-${{ env.SHA_TAG }}
+            ${{ env.IMAGE_NAME }}:node-latest
+            
       # ---- PHP image ----
       - name: Build & Push PHP
         uses: docker/build-push-action@v6
@@ -43,5 +44,6 @@ jobs:
           context: ./DevOpsEndProj-main/php
           push: true
           tags: |
-            ${{ env.PHP_IMAGE }}:${{ env.SHA_TAG }}
-            ${{ env.PHP_IMAGE }}:latest
+            ${{ env.IMAGE_NAME }}:php
+            ${{ env.IMAGE_NAME }}:php-${{ env.SHA_TAG }}
+            ${{ env.IMAGE_NAME }}:php-latest
