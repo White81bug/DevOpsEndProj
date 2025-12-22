@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0.28
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: "super-app"
+      MYSQL_ROOT_PASSWORD: "password"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node:
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+    container_name: node-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+
+
+  php:
+    build:
+      context: ./php
+    container_name: php-app
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+
+volumes:
+  mysql_data:
