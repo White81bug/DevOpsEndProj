@@ -1,4 +1,4 @@
-name: docker-compose
+name: CI (compose build & smoke tests)
 on:
   push:
     branches: ["**"]
