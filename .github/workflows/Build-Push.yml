@@ -1,0 +1,48 @@
+name: Build & Push to Docker Hub
+
+on:
+  #push:
+    #branches: ["main"]
+  workflow_dispatch:
+
+env:
+  NODE_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devopsendproj-node
+  PHP_IMAGE:  ${{ secrets.DOCKERHUB_USERNAME }}/devopsendproj-php
+  SHA_TAG:    ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ---- Node image ----
+      - name: Build & Push Node
+        uses: docker/build-push-action@v6
+        with:
+          context: ./DevOpsEndProj-main/node
+          push: true
+          tags: |
+            ${{ env.NODE_IMAGE }}:${{ env.SHA_TAG }}
+            ${{ env.NODE_IMAGE }}:latest
+
+      # ---- PHP image ----
+      - name: Build & Push PHP
+        uses: docker/build-push-action@v6
+        with:
+          context: ./DevOpsEndProj-main/php
+          push: true
+          tags: |
+            ${{ env.PHP_IMAGE }}:${{ env.SHA_TAG }}
+            ${{ env.PHP_IMAGE }}:latest
