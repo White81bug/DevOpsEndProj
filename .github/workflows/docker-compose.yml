@@ -1,0 +1,37 @@
+name: docker-compose
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images (compose)
+        run: docker compose build
+
+      - name: Up
+        run: |
+          docker compose up -d
+          # Подождём чуть-чуть, чтобы всё поднялось
+          sleep 5
+          docker ps
+
+      - name: Smoke test — Node (/super-app)
+        run: |
+          curl -fsS http://localhost:3000/super-app | grep -q '{"super":"app"}'
+
+      - name: Smoke test — PHP (/)
+        run: |
+          curl -fsS http://localhost:8080/ | grep -q "I am running in a container."
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Down
+        if: always()
+        run: docker compose down -v
