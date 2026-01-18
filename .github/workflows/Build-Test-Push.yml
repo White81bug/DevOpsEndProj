@@ -133,6 +133,7 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
             set -e
             mkdir -p ~/app
@@ -149,11 +150,6 @@ jobs:
                   MYSQL_ROOT_PASSWORD: "password"
                 volumes:
                   - mysql_data:/var/lib/mysql
-                healthcheck:
-                  test: ["CMD", "mysqladmin", "ping", "-ppassword"]
-                  interval: 10s
-                  timeout: 5s
-                  retries: 5
 
               node:
                 image: ${DOCKERHUB_USERNAME}/devopsendproj:node-latest
