@@ -121,3 +121,70 @@ jobs:
             ${{ env.IMAGE_NAME }}:php
             ${{ env.IMAGE_NAME }}:php-${{ env.SHA_TAG }}
             ${{ env.IMAGE_NAME }}:php-latest
+
+        deploy-to-azure-vm:
+    name: Deploy to Azure VM
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Deploy via SSH (pull images + docker compose up)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+
+            # папка для деплоя
+            mkdir -p ~/app
+            cd ~/app
+
+            # (вариант A) просто создаём docker-compose.prod.yml прямо на VM
+            cat > docker-compose.prod.yml << 'EOF'
+            version: "3.9"
+            services:
+              mysql:
+                image: mysql:8.0.28
+                container_name: mysql
+                environment:
+                  MYSQL_DATABASE: "super-app"
+                  MYSQL_ROOT_PASSWORD: "password"
+                volumes:
+                  - mysql_data:/var/lib/mysql
+                healthcheck:
+                  test: ["CMD", "mysqladmin", "ping", "-ppassword"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
+
+              node:
+                image: ${DOCKERHUB_USERNAME}/devopsendproj:node-latest
+                container_name: node-app
+                ports:
+                  - "3000:3000"
+                depends_on:
+                  - mysql
+
+              php:
+                image: ${DOCKERHUB_USERNAME}/devopsendproj:php-latest
+                container_name: php-app
+                ports:
+                  - "8080:80"
+                depends_on:
+                  - mysql
+
+            volumes:
+              mysql_data:
+            EOF
+
+            # docker login + pull + up
+            echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+
+            docker ps
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
